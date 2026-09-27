@@ -44,11 +44,11 @@
   .deco{ position:absolute; pointer-events:none; user-select:none; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
   @keyframes drift-right{
     0%,100%{ transform: var(--deco-rotate, rotate(0deg)) translateX(0); }
-    50%{ transform: var(--deco-rotate, rotate(0deg)) translateX(70px); }
+    50%{ transform: var(--deco-rotate, rotate(0deg)) translateX(var(--deco-dist, 70px)); }
   }
   @keyframes drift-left{
     0%,100%{ transform: var(--deco-rotate, rotate(0deg)) translateX(0); }
-    50%{ transform: var(--deco-rotate, rotate(0deg)) translateX(-70px); }
+    50%{ transform: var(--deco-rotate, rotate(0deg)) translateX(calc(-1 * var(--deco-dist, 70px))); }
   }
   #turretDecal{ position:absolute; left:50%; bottom:30px; transform:translate(-50%,0); z-index:7; pointer-events:none; font-size:22px; line-height:1; }
   .tile .pt{position:absolute; bottom:3px; right:6px; font-size:9px; font-weight:800; opacity:.7;}
@@ -214,9 +214,10 @@ const HIT_RADIUS = 34;    // forgiveness radius (px) around the tile center
    opacity:0.5, rotate:-8}. top/left accept any CSS length ('10%', '40px').
 
    MOVEMENT: add anim:'drift-right' or anim:'drift-left' plus an optional
-   duration (seconds, default 18) to make a decoration drift back and forth —
-   see the Level 1 clouds below for an example. Layering: add zIndex (number)
-   to control stacking order within that layer when decorations overlap.
+   distance (px, default 70) and duration (seconds, default 18) to make a
+   decoration drift back and forth — see the Level 1 clouds below for an
+   example. Layering: add zIndex (number) to control stacking order within
+   that layer when decorations overlap.
 
    ⚠️ IMPORTANT: only decorations added HERE, inside a LEVEL_VISUALS entry,
    are level-scoped. Every call to applyLevelVisuals() clears out and rebuilds
@@ -249,18 +250,16 @@ const LEVEL_VISUALS = [
         {emoji:'🌳', size:24, top:'92%', left:'40%', opacity:0.5, rotate:0},
         // Drifting clouds — moved here from the old standalone body-level script
         // so they're properly level-scoped (see the MOVEMENT note above).
-        {emoji:'☁️', size:70, top:'10%', left:'8%',  opacity:0.55, anim:'drift-right', duration:16},
-        {emoji:'☁️', size:48, top:'5%',  left:'55%', opacity:0.45, anim:'drift-left',  duration:20},
-        {emoji:'☁️', size:56, top:'16%', left:'30%', opacity:0.4,  anim:'drift-right', duration:24},
-        
-        
+        {emoji:'☁️', size:70, top:'10%', left:'8%',  opacity:0.55, anim:'drift-right', distance:70,  duration:16},
+        {emoji:'☁️', size:48, top:'5%',  left:'55%', opacity:0.45, anim:'drift-left',  distance:50,  duration:20},
+        {emoji:'☁️', size:56, top:'16%', left:'30%', opacity:0.4,  anim:'drift-right', distance:90,  duration:24},
       ],
     },
     foreground:{
       css:{}, // no tint/vignette for level 1 — corners only, kept purely decorative
       decorations:[
-  {emoji:'☁️', size:156, top:'25%', left:'80%', opacity:1,  anim:'drift-right', duration:14},
-  {emoji:'☁️', size:306, top:'19%', left:'30%', opacity:1,  anim:'drift-left', duration:8},
+         {emoji:'☁️', size:256, top:'25%', left:'80%', opacity:1,  anim:'drift-left', distance:190,  duration:8}, 
+        {emoji:'☁️', size:356, top:'16%', left:'30%', opacity:1,  anim:'drift-right', distance:290,  duration:14},
          // 🌲 RIGHT BORDER 
   {emoji:'🌳', size:100, top:'100%',  left:'95%',  opacity:1, rotate:-20 ,zIndex: 1}, 
   {emoji:'🌳', size:100, top:'95%',  left:'95%',  opacity:1, rotate:-20 ,zIndex: 2}, 
@@ -344,6 +343,7 @@ function renderDecorations(layerEl, list){
     const rotate = `rotate(${d.rotate||0}deg)`;
     if(d.anim==='drift-right' || d.anim==='drift-left'){
       el.style.setProperty('--deco-rotate', rotate);
+      el.style.setProperty('--deco-dist', (d.distance!=null ? d.distance : 70)+'px');
       el.style.animation = `${d.anim} ${d.duration||18}s ease-in-out infinite`;
     } else {
       el.style.transform = rotate;
