@@ -13,16 +13,20 @@
     --amber:#FBBF24; --cyan:#22D3EE; --pink:#F472B6; --mint:#34D399; --violet:#A78BFA; --gold:#FDE68A;
     --cream:#FDF4E3;
   }
-  html,body{height:100%;}
+  :root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  html{ scroll-padding-top:env(safe-area-inset-top,0px); height:100%; height:100dvh; }
   body{
+    height:100%; height:100dvh; min-height:480px;
     font-family:'Nunito',sans-serif; background:var(--bg-deep); color:var(--cream);
     background-image:
       radial-gradient(circle at 15% 20%, rgba(167,139,250,0.15), transparent 40%),
       radial-gradient(circle at 85% 80%, rgba(34,211,238,0.12), transparent 40%);
     overflow:hidden;
   }
+  #app{ height:100%; }
   .font-display{font-family:'Baloo 2',cursive;}
   #arena{
+    min-height:280px;
     background:
       repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 42px),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 42px);
@@ -31,13 +35,21 @@
   .tile{
     position:absolute; width:56px; height:56px; display:flex; align-items:center; justify-content:center;
     border-radius:16px; font-family:'Baloo 2',cursive; font-weight:700; font-size:24px; color:#1E1B4B;
-    cursor:pointer; user-select:none; box-shadow:0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.25);
-    transition:transform .12s ease, box-shadow .12s ease; will-change:transform;
+    pointer-events:none; user-select:none; box-shadow:0 4px 0 rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.25);
+    transition:opacity .15s ease, transform .15s ease; will-change:transform;
   }
-  .tile:active{transform:scale(0.94);}
   .tile .pt{position:absolute; bottom:3px; right:6px; font-size:9px; font-weight:800; opacity:.7;}
   .tile.premium{box-shadow:0 0 0 3px var(--gold), 0 4px 14px rgba(253,230,138,.7); animation:pulseGold 1.1s ease-in-out infinite;}
   @keyframes pulseGold{0%,100%{filter:brightness(1);}50%{filter:brightness(1.25);}}
+  #grabSvg{position:absolute; inset:0; width:100%; height:100%; z-index:5;}
+  #grabHub{
+    position:absolute; left:50%; bottom:0; width:68px; height:34px;
+    border-radius:9999px 9999px 0 0; transform:translateX(-50%);
+    z-index:6; box-shadow:0 0 18px 5px rgba(251,191,36,.55);
+    transition:box-shadow .2s ease;
+  }
+  #grabHub.charging{animation:hubPulse .5s ease-in-out infinite;}
+  @keyframes hubPulse{0%,100%{transform:translateX(-50%) scale(1);}50%{transform:translateX(-50%) scale(1.1);}}
   .tray-slot{
     width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center;
     font-family:'Baloo 2',cursive; font-weight:700; font-size:22px; color:#1E1B4B; cursor:pointer;
@@ -52,6 +64,7 @@
     transition:transform .1s ease, background .2s ease;
   }
   .word-slot.filled{background:var(--mint); color:#062018; border-color:var(--mint); cursor:default;}
+  .word-slot.ghost{color:transparent; -webkit-text-stroke:1.5px rgba(253,244,227,0.4); background:rgba(255,255,255,0.05); border-style:dashed;}
   .word-slot.locked{opacity:.5; cursor:default;}
   @keyframes shake{10%,90%{transform:translateX(-3px);}20%,80%{transform:translateX(5px);}30%,50%,70%{transform:translateX(-7px);}40%,60%{transform:translateX(7px);}}
   .shake{animation:shake .45s;}
@@ -61,6 +74,8 @@
   ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2); border-radius:8px;}
   .btn-pop:active{transform:scale(.95);}
   .modal-backdrop{background:rgba(15,13,45,0.82); backdrop-filter:blur(3px);}
+  #modalRoot{pointer-events:none;}
+  #modalRoot > *{pointer-events:auto;}
 </style>
 </head>
 <body class="h-screen w-screen">
@@ -81,12 +96,14 @@
   </header>
 
   <!-- ============ MAIN: ARENA + WORKSHOP ============ -->
-  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
-    <section id="arena" class="relative flex-1 lg:basis-[70%] overflow-hidden">
-      <div id="arenaHint" class="absolute inset-0 flex items-center justify-center text-[var(--cream)]/30 font-display text-lg text-center px-6 pointer-events-none">Tap the drifting letters to catch them!</div>
+  <main class="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+    <section id="arena" class="relative flex-1 min-h-0 lg:basis-[70%] overflow-hidden">
+      <div id="arenaHint" class="absolute inset-0 flex items-center justify-center text-[var(--cream)]/30 font-display text-lg text-center px-6 pointer-events-none z-10">Press &amp; hold anywhere, aim with your cursor, let go to fire!</div>
+      <svg id="grabSvg"><polyline id="grabLine" points="" fill="none" stroke="#FBBF24" stroke-width="5" stroke-linecap="round" opacity="0"/></svg>
+      <div id="grabHub" style="background:#FBBF24;"></div>
     </section>
 
-    <aside id="workshop" class="lg:basis-[30%] lg:max-w-[380px] bg-[var(--bg-panel)]/60 overflow-y-auto p-4 flex flex-col gap-3 border-t-4 lg:border-t-0 lg:border-l-4 border-[var(--bg-panel-light)]">
+    <aside id="workshop" class="max-h-[34vh] lg:max-h-none lg:basis-[30%] lg:max-w-[380px] bg-[var(--bg-panel)]/60 overflow-y-auto p-4 flex flex-col gap-3 border-t-4 lg:border-t-0 lg:border-l-4 border-[var(--bg-panel-light)]">
       <div>
         <p class="text-[11px] uppercase tracking-wide text-[var(--cream)]/50 font-bold">Topic</p>
         <h2 id="topicVal" class="font-display text-2xl text-[var(--gold)]">Backyard Basics</h2>
@@ -121,6 +138,16 @@ const LEVEL_REGISTRY = Object.freeze([
   {id:5, topic:"Space Explorers",  words:["ROCKET","PLANET","GALAXY","COMET"],driftSpeed:80, spawnMs:950,  maxOnScreen:10, trayOversize:3, distractorRatio:0.22, premiumChance:0.07},
 ]);
 const TILE_COLORS = ["#FBBF24","#22D3EE","#F472B6","#34D399","#A78BFA","#FCA5A5"];
+const GRAB_SKINS = [
+  {name:"Garden Vine",    color:"#34D399", width:7, zigzag:false},
+  {name:"Spider Thread",  color:"#E5E7EB", width:2, zigzag:false},
+  {name:"Tentacle Reach", color:"#22D3EE", width:9, zigzag:false},
+  {name:"Lightning Whip", color:"#FBBF24", width:4, zigzag:true},
+  {name:"Tractor Beam",   color:"#A78BFA", width:6, zigzag:false},
+];
+const CHARGE_MS = 1100;   // time held to reach max string length
+const RETRACT_MS = 200;   // string snap-back duration after firing
+const HIT_RADIUS = 34;    // forgiveness radius (px) around the tile center
 
 /* ================= STATE ================= */
 let state = null;
@@ -130,6 +157,7 @@ function freshState(){
     words:[], tray:[], arenaTiles:[], selectedTrayIdx:null,
     correct:0, wrong:0, levelStartTime:0, running:false, nextTileId:1,
     lastSpawn:0, rafId:null, spawnTimer:null,
+    grab:{active:false, phase:'idle', angle:0, length:0, cx:0, cy:0, startTime:0, pointerId:null, retractStart:0, retractFrom:0},
   };
 }
 
@@ -178,9 +206,9 @@ function renderWorkshop(){
     slotsWrap.className = 'flex gap-1.5 flex-wrap';
     w.slots.forEach((letter, si)=>{
       const slot = document.createElement('div');
-      slot.className = `word-slot ${letter?'filled':''} ${w.solved?'locked':''}`;
-      slot.textContent = letter || '';
-      slot.addEventListener('click', ()=>onSlotClick(wi, si));
+      slot.className = `word-slot ${letter?'filled':'ghost'} ${w.solved?'locked':''}`;
+      slot.textContent = letter || w.word[si];
+      slot.addEventListener('pointerdown', ()=>onSlotClick(wi, si));
       slotsWrap.appendChild(slot);
     });
     const label = document.createElement('p');
@@ -205,7 +233,7 @@ function renderTray(){
       slot.style.background = tile.color;
       slot.innerHTML = `${tile.letter}<span class="pt" style="position:absolute;bottom:2px;right:5px;font-size:8px;">${tile.points}</span>`;
       slot.style.position='relative';
-      slot.addEventListener('click', ()=>onTrayClick(i));
+      slot.addEventListener('pointerdown', ()=>onTrayClick(i));
     } else {
       slot.className = 'tray-slot empty';
     }
@@ -242,28 +270,130 @@ function spawnTile(){
   el.className = `tile pop-in ${isPremium?'premium':''}`;
   el.style.background = tileObj.color;
   el.innerHTML = `${letter}<span class="pt">${tileObj.points}</span>`;
-  el.addEventListener('click', ()=>catchTile(tileObj.id));
   arena.appendChild(el);
   tileObj.el = el;
   state.arenaTiles.push(tileObj);
-  document.getElementById('arenaHint').style.display = 'none';
 }
 
-function catchTile(id){
-  const lvl = currentLevel();
-  const idx = state.arenaTiles.findIndex(t=>t.id===id);
+function maxReachForAngle(angle, w, h, cx, cy){
+  const margin = 56; // leave roughly one tile-width of clearance from the edge
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  let t = Infinity;
+  if(dx > 1e-4) t = Math.min(t, (w-margin-cx)/dx);
+  else if(dx < -1e-4) t = Math.min(t, (margin-cx)/dx);
+  if(dy < -1e-4) t = Math.min(t, (margin-cy)/dy);
+  if(!isFinite(t) || t<0) t = Math.max(w,h);
+  return Math.max(t, 40);
+}
+/* ================= GRAB STRING MECHANIC ================= */
+function pointerArenaPos(e){
+  const arena = document.getElementById('arena');
+  const rect = arena.getBoundingClientRect();
+  return {x:e.clientX-rect.left, y:e.clientY-rect.top, rect};
+}
+function startCharge(e){
+  if(!state.running || state.grab.active) return;
+  if(e.button !== undefined && e.button > 0) return;
+  const arena = document.getElementById('arena');
+  arena.setPointerCapture(e.pointerId);
+  const {x:px, y:py, rect} = pointerArenaPos(e);
+  const g = state.grab;
+  g.cx = rect.width/2; g.cy = rect.height;
+  g.angle = Math.atan2(Math.min(py,g.cy)-g.cy, px-g.cx);
+  g.length = 0; g.active = true; g.phase = 'charging';
+  g.startTime = performance.now(); g.pointerId = e.pointerId;
+  document.getElementById('arenaHint').style.display = 'none';
+  document.getElementById('grabHub').classList.add('charging');
+  e.preventDefault();
+}
+function moveCharge(e){
+  const g = state.grab;
+  if(!g.active || g.phase!=='charging' || e.pointerId!==g.pointerId) return;
+  const {x:px, y:py} = pointerArenaPos(e);
+  g.angle = Math.atan2(Math.min(py,g.cy)-g.cy, px-g.cx);
+  e.preventDefault();
+}
+function distToSegment(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1;
+  const lenSq = dx*dx+dy*dy;
+  let t = lenSq>1e-6 ? ((px-x1)*dx+(py-y1)*dy)/lenSq : 0;
+  t = Math.max(0, Math.min(1,t));
+  return {dist:Math.hypot(px-(x1+t*dx), py-(y1+t*dy)), t};
+}
+function findPathHit(g){
+  const tipX = g.cx + Math.cos(g.angle)*g.length;
+  const tipY = g.cy + Math.sin(g.angle)*g.length;
+  let best=null, bestT=Infinity;
+  state.arenaTiles.forEach(t=>{
+    const {dist, t:frac} = distToSegment(t.x+28, t.y+28, g.cx, g.cy, tipX, tipY);
+    if(dist<=HIT_RADIUS && frac<bestT){ bestT=frac; best=t; }
+  });
+  return best;
+}
+function grabTile(tileObj){
+  const idx = state.arenaTiles.findIndex(t=>t.id===tileObj.id);
   if(idx===-1) return;
-  const cap = trayCapacity(lvl);
-  if(state.tray.length >= cap){
-    const arena = document.getElementById('arena');
-    arena.classList.add('shake'); setTimeout(()=>arena.classList.remove('shake'), 450);
-    return;
-  }
-  const tileObj = state.arenaTiles[idx];
-  tileObj.el.remove();
+  const t = state.arenaTiles[idx];
+  t.el.style.opacity = '0';
+  t.el.style.transform += ' scale(0.35)';
+  setTimeout(()=>t.el.remove(), 160);
   state.arenaTiles.splice(idx,1);
-  state.tray.push({letter:tileObj.letter, points:tileObj.points, isPremium:tileObj.isPremium, color:tileObj.color});
+  state.tray.push({letter:t.letter, points:t.points, isPremium:t.isPremium, color:t.color});
   renderTray();
+}
+function resolveHitIfAny(g){
+  const hit = findPathHit(g);
+  if(!hit) return false;
+  const cap = trayCapacity(currentLevel());
+  if(state.tray.length < cap){
+    grabTile(hit);
+  } else {
+    const trayEl = document.getElementById('tray');
+    trayEl.classList.add('shake'); setTimeout(()=>trayEl.classList.remove('shake'), 450);
+  }
+  return true;
+}
+function finishShot(){
+  const g = state.grab;
+  const arena = document.getElementById('arena');
+  if(g.pointerId!==null){ try{ arena.releasePointerCapture(g.pointerId); }catch(err){} }
+  g.active = false;
+  document.getElementById('grabHub').classList.remove('charging');
+  g.phase = 'retracting'; g.retractStart = performance.now(); g.retractFrom = g.length;
+}
+function endCharge(e){
+  const g = state.grab;
+  if(!g.active || e.pointerId!==g.pointerId) return;
+  resolveHitIfAny(g);
+  finishShot();
+}
+function cancelCharge(e){
+  const g = state.grab;
+  if(!g.active || e.pointerId!==g.pointerId) return;
+  finishShot();
+}
+function straightPoints(cx,cy,angle,length){
+  const x=cx+Math.cos(angle)*length, y=cy+Math.sin(angle)*length;
+  return `${cx},${cy} ${x},${y}`;
+}
+function zigzagPoints(cx,cy,angle,length){
+  const segments=6, jitter=9;
+  const dx=Math.cos(angle), dy=Math.sin(angle), nx=-dy, ny=dx;
+  const pts=[`${cx},${cy}`];
+  for(let i=1;i<=segments;i++){
+    const t=(length/segments)*i;
+    const j = (i===segments) ? 0 : (Math.random()*2-1)*jitter;
+    pts.push(`${cx+dx*t+nx*j},${cy+dy*t+ny*j}`);
+  }
+  return pts.join(' ');
+}
+function updateGrabVisual(){
+  const g = state.grab;
+  const line = document.getElementById('grabLine');
+  if(g.phase==='idle'){ line.setAttribute('opacity','0'); return; }
+  line.setAttribute('opacity','1');
+  const skin = GRAB_SKINS[state.levelIndex];
+  line.setAttribute('points', skin.zigzag ? zigzagPoints(g.cx,g.cy,g.angle,g.length) : straightPoints(g.cx,g.cy,g.angle,g.length));
 }
 
 let lastTs = 0;
@@ -282,6 +412,18 @@ function animate(ts){
     if(t.y>=h-size){ t.y=h-size; t.vy=-Math.abs(t.vy); }
     t.el.style.transform = `translate(${t.x}px, ${t.y}px)`;
   });
+  const g = state.grab;
+  if(g.phase==='charging'){
+    const maxLen = maxReachForAngle(g.angle, w, h, g.cx, g.cy);
+    g.length = maxLen * Math.min((ts-g.startTime)/CHARGE_MS, 1);
+    updateGrabVisual();
+    if(resolveHitIfAny(g)){ finishShot(); }
+  } else if(g.phase==='retracting'){
+    const ratio = Math.min((ts-g.retractStart)/RETRACT_MS, 1);
+    g.length = g.retractFrom * (1-ratio);
+    updateGrabVisual();
+    if(ratio>=1) g.phase = 'idle';
+  }
   state.rafId = requestAnimationFrame(animate);
 }
 
@@ -345,8 +487,17 @@ function startLevel(idx){
   state.levelStartTime = Date.now();
   document.getElementById('arena').querySelectorAll('.tile').forEach(el=>el.remove());
   state.arenaTiles = [];
+  state.grab = {active:false, phase:'idle', angle:0, length:0, cx:0, cy:0, startTime:0, pointerId:null, retractStart:0, retractFrom:0};
+  const skin = GRAB_SKINS[idx];
+  const hub = document.getElementById('grabHub');
+  hub.style.background = skin.color;
+  hub.style.boxShadow = `0 0 18px 5px ${skin.color}88`;
+  const line = document.getElementById('grabLine');
+  line.setAttribute('stroke', skin.color);
+  line.setAttribute('stroke-width', skin.width);
+  line.setAttribute('opacity','0');
   document.getElementById('arenaHint').style.display = 'flex';
-  document.getElementById('arenaHint').textContent = 'Tap the drifting letters to catch them!';
+  document.getElementById('arenaHint').textContent = `Press & hold, aim, let go to fire the ${skin.name}!`;
   renderStatus(); renderWorkshop(); renderTray();
   state.running = true;
   clearInterval(state.spawnTimer);
@@ -415,7 +566,7 @@ function showStartScreen(){
   showModal(`
     <div class="pop-in bg-[var(--bg-panel)] rounded-3xl p-7 max-w-md w-[90%] text-center shadow-2xl border-4 border-[var(--amber)]">
       <p class="font-display text-3xl md:text-4xl text-[var(--amber)] mb-2">🌀 Word Drift</p>
-      <p class="text-[var(--cream)]/80 mb-4">Catch drifting letters into your tray, then spell topic words on the side to level up. Watch out for useless letters — a full tray of junk costs points to clear, and if your score hits zero, it's game over!</p>
+      <p class="text-[var(--cream)]/80 mb-4">Press and hold anywhere in the arena, aim with your cursor, and let go to fire a string that plucks the nearest letter. Land it in your tray, then spell the topic words on the side to level up. Watch out for useless letters — a full tray of junk costs points to clear, and if your score hits zero, it's game over!</p>
       <button id="modalStartBtn" class="btn-pop w-full bg-[var(--amber)] text-[#3a2600] font-display text-lg py-3 rounded-xl">Start Game</button>
     </div>
   `);
@@ -429,6 +580,11 @@ function showStartScreen(){
 /* ================= WIRE UP ================= */
 document.getElementById('disposeBtn').addEventListener('click', onDispose);
 document.getElementById('forfeitBtn').addEventListener('click', onForfeit);
+const arenaEl = document.getElementById('arena');
+arenaEl.addEventListener('pointerdown', startCharge);
+arenaEl.addEventListener('pointermove', moveCharge);
+arenaEl.addEventListener('pointerup', endCharge);
+arenaEl.addEventListener('pointercancel', cancelCharge);
 window.addEventListener('resize', ()=>{
   const arena = document.getElementById('arena');
   const w = arena.clientWidth, h = arena.clientHeight, size=56;
