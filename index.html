@@ -197,6 +197,8 @@
       // Add the fully built cloud to the webpage body
       document.body.appendChild(cloudElement);
     });
+
+ 
 "use strict";
 
 /* ================= DATA ================= */
@@ -340,8 +342,8 @@ const LEVEL_VISUALS = [
   {emoji:'🌳', size:100, top:'10%',  left:'-5%',   opacity:1, rotate:-20 ,zIndex: 19},
 
 
-         {emoji:'☁️', size:384, top:'10%', left:'18%', opacity:1, rotate:0},
-        {emoji:'☁️', size:267, top:'5%', left:'55%', opacity:1, rotate:0},
+         {emoji:'☁️', size:384, top:'10%', left:'18%', opacity:1, rotate:180},
+        {emoji:'☁️', size:267, top:'5%', left:'55%', opacity:1, rotate:180},
         {emoji:'🌼', size:262, top:'80%', left:'10%', opacity:1, rotate:-6},
         {emoji:'🌼', size:224, top:'80%', left:'78%', opacity:1, rotate:10},
        
@@ -355,7 +357,7 @@ const LEVEL_VISUALS = [
       stringColor:'#34D399',
       stringWidth:7,
       zigzag:false,
-      topDecal:'🌱',
+      topDecal:'',
     },
   },
   /* ---- Level 2 index 1 : "Garden Friends" — TODO, follow the Level 1 pattern above ---- */
