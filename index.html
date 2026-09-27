@@ -7,7 +7,45 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
+ <title>Cloud Background</title>
+  <style>
+    /* Makes sure the sky fills the screen */
+    body {
+      background: #87CEEB; /* Sky blue */
+      overflow: hidden;
+      margin: 0;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Base class for your clouds */
+    .cloud {
+      display: inline-block;
+      position: absolute;
+      will-change: transform;
+      user-select: none; /* Prevents selecting the emoji text */
+    }
+
+    /* Animation for moving Left to Right, then back */
+    @keyframes driftRight {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(100px); } 
+      100% { transform: translateX(0); }
+    }
+
+    /* Animation for moving Right to Left, then back */
+    @keyframes driftLeft {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(-100px); } 
+      100% { transform: translateX(0); }
+    }
+
+    /* Apply animations */
+    .move-right { animation: driftRight 15s ease-in-out infinite; }
+    .move-left { animation: driftLeft 20s ease-in-out infinite; }
+  </style>
+  
+  <style>
   :root{
     --bg-deep:#1E1B4B; --bg-panel:#312E81; --bg-panel-light:#4338CA;
     --amber:#FBBF24; --cyan:#22D3EE; --pink:#F472B6; --mint:#34D399; --violet:#A78BFA; --gold:#FDE68A;
@@ -131,6 +169,34 @@
 <div id="modalRoot" class="fixed inset-0 z-50"></div>
 
 <script>
+
+   // 1. Your updated cloud object data array
+    const clouds = [
+      {emoji:'☁️', className: 'cloud move-right', size:384, top:'85%', left:'80%', opacity:1, rotate:0},
+      {emoji:'☁️', className: 'cloud move-left',  size:260, top:'70%', left:'55%', opacity:1, rotate:0},
+      {emoji:'☁️', className: 'cloud move-right', size:299, top:'90%', left:'5%',  opacity:1, rotate:0}
+    ];
+
+    // 2. Loop through each cloud and build the HTML element dynamically
+    clouds.forEach(cloudData => {
+      const cloudElement = document.createElement('div');
+      
+      // Assign the CSS classes for movement
+      cloudElement.className = cloudData.className;
+      
+      // Inject the text content (the emoji)
+      cloudElement.textContent = cloudData.emoji;
+      
+      // Apply the visual styles from your configuration
+      cloudElement.style.fontSize = cloudData.size + 'px';
+      cloudElement.style.top = cloudData.top;
+      cloudElement.style.left = cloudData.left;
+      cloudElement.style.opacity = cloudData.opacity;
+      cloudElement.style.transform = `rotate(${cloudData.rotate}deg)`;
+
+      // Add the fully built cloud to the webpage body
+      document.body.appendChild(cloudElement);
+    });
 "use strict";
 
 /* ================= DATA ================= */
