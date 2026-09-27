@@ -29,14 +29,14 @@
     /* Animation for moving Left to Right, then back */
     @keyframes driftRight {
       0% { transform: translateX(0); }
-      50% { transform: translateX(100px); } 
+      50% { transform: translateX(80vw)); } 
       100% { transform: translateX(0); }
     }
 
     /* Animation for moving Right to Left, then back */
     @keyframes driftLeft {
       0% { transform: translateX(0); }
-      50% { transform: translateX(-100px); } 
+      50% { transform: translateX(90vw); } 
       100% { transform: translateX(0); }
     }
 
@@ -173,7 +173,7 @@
    // 1. Your updated cloud object data array
     const clouds = [
   {emoji:'☁️', className: 'cloud move-right', size:384, top:'10%',  opacity:1, rotate:0}, // Moved from 85% to 10%
-  {emoji:'☁️', className: 'cloud move-left',  size:260, top:'25%',  opacity:1, rotate:0}, // Moved from 70% to 25%
+  {emoji:'☁️', className: 'cloud move-left',  size:260, top:'5%',  opacity:1, rotate:0}, // Moved from 70% to 25%
   {emoji:'☁️', className: 'cloud move-right', size:299, top:'15%',   opacity:1, rotate:0}  // Moved from 90% to 15%
 ];
 
