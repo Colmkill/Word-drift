@@ -704,7 +704,19 @@ function weightedPick(map){
   return entries[entries.length-1][0];
 }
 function setupWordsForLevel(lvl){
-  state.words = lvl.words.map(w=>({ word:w, slots:Array(w.length).fill(null), solved:false }));
+  state.words = lvl.words.map(w=>{
+    // Progressive ghost hiding: hide one additional slot per level beyond the
+    // first (Level 1 = full hints, Level 5 = 4 slots hidden). Hidden slots are
+    // chosen randomly per word and stored in state so they stay stable across
+    // the frequent re-renders of the workshop.
+    const hidden = new Set();
+    const hideCount = Math.min(state.levelIndex, w.length);
+    const indices = Array.from({length: w.length}, (_,i)=>i);
+    while(hidden.size < hideCount){
+      hidden.add(indices.splice(Math.floor(Math.random()*indices.length), 1)[0]);
+    }
+    return { word:w, slots:Array(w.length).fill(null), solved:false, hiddenSlots:hidden };
+  });
 }
 
 /* ================= FEEDBACK UTILS ================= */
@@ -762,7 +774,9 @@ function renderWorkshop(highlightWordIdx){
     w.slots.forEach((letter, si)=>{
       const slot = document.createElement('div');
       slot.className = `word-slot ${letter?'filled':'ghost'} ${w.solved?'locked':''}`;
-      slot.textContent = letter || w.word[si];
+      // Ghost letters are progressively hidden by level via w.hiddenSlots
+      const showGhost = !w.hiddenSlots || !w.hiddenSlots.has(si);
+      slot.textContent = letter || (showGhost ? w.word[si] : '');
       slot.setAttribute('role','button');
       slot.setAttribute('tabindex', w.solved||letter ? '-1' : '0');
       slot.setAttribute('aria-label', letter ? `slot ${si+1}, letter ${letter}` : `empty slot ${si+1}, tap to place selected letter`);
@@ -790,7 +804,7 @@ function renderTray(justAddedIdx){
       slot.setAttribute('role','button');
       slot.setAttribute('tabindex','0');
       slot.setAttribute('aria-label', `tray letter ${tile.letter}, ${tile.points} points${tile.isPremium?', premium':''}`);
-      slot.textContent = tile.letter;
+      slot.innerHTML = `${tile.letter}<span class="pt">${tile.points}</span>`;
       slot.addEventListener('pointerdown', ()=>onTrayClick(i));
       slot.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onTrayClick(i); } });
     } else {
