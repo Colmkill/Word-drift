@@ -804,7 +804,7 @@ function renderTray(justAddedIdx){
       slot.setAttribute('role','button');
       slot.setAttribute('tabindex','0');
       slot.setAttribute('aria-label', `tray letter ${tile.letter}, ${tile.points} points${tile.isPremium?', premium':''}`);
-      slot.innerHTML = `${tile.letter}<span class="pt">${tile.points}</span>`;
+      slot.textContent = tile.letter;
       slot.addEventListener('pointerdown', ()=>onTrayClick(i));
       slot.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onTrayClick(i); } });
     } else {
