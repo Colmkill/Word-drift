@@ -479,16 +479,16 @@ const LEVEL_VISUALS = [
         {emoji:'⚽', size:44, top:'76%', left:'32%', opacity:.9},
         {emoji:'🦴', size:36, top:'88%', left:'58%', opacity:.9, rotate:-15},
         // Butterflies fluttering at different depths
-        {emoji:'🦋', size:30, top:'40%', left:'15%', opacity:.95, anim:'drift-right', distance:60, duration:7},
-        {emoji:'🦋', size:22, top:'55%', left:'70%', opacity:.8, anim:'drift-left', distance:50, duration:9},
+        {emoji:'🦋', size:300, top:'40%', left:'15%', opacity:.95, anim:'drift-right', distance:60, duration:7},
+        {emoji:'🦋', size:220, top:'55%', left:'70%', opacity:.8, anim:'drift-left', distance:50, duration:9},
         // Bees hovering near the flowers
-        {emoji:'🐝', size:26, top:'68%', left:'16%', opacity:.95, anim:'drift-up', distance:40, duration:5},
-        {emoji:'🐝', size:20, top:'74%', left:'82%', opacity:.85, anim:'drift-right', distance:44, duration:6},
+        {emoji:'🐝', size:260, top:'68%', left:'16%', opacity:.95, anim:'drift-up', distance:40, duration:5},
+        {emoji:'🐝', size:200, top:'74%', left:'82%', opacity:.85, anim:'drift-right', distance:44, duration:6},
         {emoji:'🌼', size:262, top:'80%', left:'10%', opacity:1, rotate:-6},
         {emoji:'🌼', size:224, top:'80%', left:'78%', opacity:1, rotate:10},
         // scattered tufts of grass & pebbles across the lawn
-        ...scatter(10, ()=>({emoji:'🌿', size:34, topMin:60, topMax:92, leftMin:5, leftMax:95, opacity:.55, rotate: Math.random()*30-15})),
-        ...scatter(6,  ()=>({emoji:'🪨', size:20, topMin:62, topMax:90, leftMin:8, leftMax:92, opacity:.5})),
+        ...scatter(50, ()=>({emoji:'🌿', size:34, topMin:60, topMax:92, leftMin:5, leftMax:95, opacity:.55, rotate: Math.random()*30-15})),
+        ...scatter(60,  ()=>({emoji:'🪨', size:20, topMin:62, topMax:90, leftMin:8, leftMax:92, opacity:.5})),
       ],
     },
     turret:{
