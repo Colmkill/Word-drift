@@ -310,12 +310,112 @@ const START_SCORE = 150;
 
 /* Words are [WORD, CLUE] pairs; the clue shows as a subtitle on each word card. */
 const LEVEL_REGISTRY = Object.freeze([
-  {id:1, topic:"Backyard Basics",  words:[["CAT","Chases mice and purrs"],["DOG","Loyal best friend"],["TREE","Grows bark and leaves"],["HOSE","Sprays the garden"]], driftSpeed:34, spawnMs:1550, maxOnScreen:6, trayOversize:2, distractorRatio:0.04, premiumChance:0},
-  {id:2, topic:"Garden Friends",   words:[["FROG","Hops and croaks by the pond"],["BEE","Makes honey, has a sting"],["SNAIL","Carries its shell slowly"]], driftSpeed:44, spawnMs:1400, maxOnScreen:7, trayOversize:2, distractorRatio:0.09, premiumChance:0},
-  {id:3, topic:"Ocean Creatures",  words:[["CRAB","Scuttles sideways on sand"],["FISH","Breathes through gills"],["SHARK","Fin you fear in the water"],["OCTOPUS","Eight arms, squirts ink"]], driftSpeed:54, spawnMs:1250, maxOnScreen:8, trayOversize:3, distractorRatio:0.13, premiumChance:0},
-  {id:4, topic:"Weather Words",    words:[["CLOUD","Fluffy float in the sky"],["STORM","Thunder, lightning, rain"],["BREEZE","A gentle wind"],["RAINBOW","Colours after the rain"]], driftSpeed:66, spawnMs:1100, maxOnScreen:9, trayOversize:3, distractorRatio:0.18, premiumChance:0},
-  {id:5, topic:"Space Explorers",  words:[["ROCKET","Blasts off to the stars"],["PLANET","Earth is one of these"],["GALAXY","A vast swirl of stars"],["COMET","Icy tail streaking past"]], driftSpeed:80, spawnMs:950, maxOnScreen:10, trayOversize:3, distractorRatio:0.22, premiumChance:0.07},
+  {
+    id: 1,
+    topic: 'Backyard Basics',
+    words: [
+      ['CAT', 'Chases mice and purrs'],
+      ['DOG', 'Loyal best friend'],
+      ['TREE', 'Grows bark and leaves'],
+      ['HOSE', 'Sprays the garden'],
+      ['FENCE', 'Wooden border around the yard'],
+      ['SHED', 'Stores the garden tools'],
+      ['BIRD', 'Sings from the branches'],
+      ['GRASS', 'Green lawn blades'],
+      ['SWING', 'Seat that sways back and forth']
+    ],
+    driftSpeed: 34,
+    spawnMs: 1550,
+    maxOnScreen: 6,
+    trayOversize: 2,
+    distractorRatio: 0.04,
+    premiumChance: 0
+  },
+  {
+    id: 2,
+    topic: 'Garden Friends',
+    words: [
+      ['FROG', 'Hops and croaks by the pond'],
+      ['BEE', 'Makes honey, has a sting'],
+      ['SNAIL', 'Carries its shell slowly'],
+      ['WORM', 'Wriggles through the soil'],
+      ['LADYBUG', 'Red with black spots'],
+      ['SPIDER', 'Spins a sticky web'],
+      ['ANT', 'Tiny worker marching in lines'],
+      ['TOAD', 'Warty cousin of the frog']
+    ], 
+    driftSpeed: 44,
+    spawnMs: 1400,
+    maxOnScreen: 7,
+    trayOversize: 2,
+    distractorRatio: 0.09,
+    premiumChance: 0
+  },
+  {
+    id: 3,
+    topic: 'Ocean Creatures',
+    words: [
+      ['CRAB', 'Scuttles sideways on sand'],
+      ['FISH', 'Breathes through gills'],
+      ['SHARK', 'Fin you fear in the water'],
+      ['OCTOPUS', 'Eight arms, squirts ink'],
+      ['WHALE', 'Giant mammal that sings'],
+      ['DOLPHIN', 'Clever, playful jumper'],
+      ['TURTLE', 'Carries its home on its back'],
+      ['SEAHORSE', 'Dads carry the babies'],
+      ['STARFISH', 'Five arms, shaped like a star']
+    ],
+    driftSpeed: 54,
+    spawnMs: 1250,
+    maxOnScreen: 8,
+    trayOversize: 3,
+    distractorRatio: 0.13,
+    premiumChance: 0
+  },
+  {
+    id: 4,
+    topic: 'Weather Words',
+    words: [
+      ['CLOUD', 'Fluffy & floats in the sky'],
+      ['STORM', 'Thunder, lightning, rain'],
+      ['BREEZE', 'A gentle wind'],
+      ['RAINBOW', 'Colours after the rain'],
+      ['SNOW', 'Frozen white flakes'],
+      ['THUNDER', 'Rumbling boom after lightning'],
+      ['FOG', 'Thick cloud at ground level'],
+      ['HAIL', 'Frozen pellets from the sky'],
+      ['SUNSHINE', 'Bright, warm daylight']
+    ],
+    driftSpeed: 66,
+    spawnMs: 1100,
+    maxOnScreen: 9,
+    trayOversize: 3,
+    distractorRatio: 0.18,
+    premiumChance: 0
+  },
+  {
+    id: 5,
+    topic: 'Space Explorers',
+    words: [
+      ['ROCKET', 'Blasts off to the stars'],
+      ['PLANET', 'Earth is one of these'],
+      ['GALAXY', 'A vast swirl of stars'],
+      ['COMET', 'Icy tail streaking past'],
+      ['STAR', 'Twinkles in the night sky'],
+      ['MOON', 'Orbits the Earth'],
+      ['ORBIT', 'Curved path around a planet'],
+      ['ASTEROID', 'Rocky chunk drifting in space'],
+      ['NEBULA', 'Colourful cloud of gas and dust']
+    ],
+    driftSpeed: 80,
+    spawnMs: 950,
+    maxOnScreen: 10,
+    trayOversize: 3,
+    distractorRatio: 0.22,
+    premiumChance: 0.07
+  }
 ]);
+  
 const TILE_COLORS = ["#FBBF24","#22D3EE","#F472B6","#34D399","#A78BFA","#FCA5A5"];
 const GRAB_SKINS = [
   {name:"Garden Vine",    color:"#34D399", width:7, zigzag:true},
@@ -690,7 +790,10 @@ function freshState(){
 
 /* ================= HELPERS ================= */
 function currentLevel(){ return LEVEL_REGISTRY[state.levelIndex]; }
-function trayCapacity(lvl){ return Math.max(...lvl.words.map(([w])=>w.length)) + lvl.trayOversize; }
+function trayCapacity(lvl){
+  const src = (state && state.words && state.words.length) ? state.words.map(w=>w.word) : lvl.words.map(([w])=>w);
+  return Math.max(...src.map(w=>w.length)) + lvl.trayOversize;
+}
 function letterDemand(){
   const demand = {};
   state.words.forEach(w=>{
@@ -707,11 +810,17 @@ function weightedPick(map){
   return entries[entries.length-1][0];
 }
 function setupWordsForLevel(lvl){
-  state.words = lvl.words.map(w=>{
-    // Progressive ghost hiding: hide one additional slot per level beyond the
-    // first (Level 1 = full hints, Level 5 = 4 slots hidden). Hidden slots are
-    // chosen randomly per word and stored in state so they stay stable across
-    // the frequent re-renders of the workshop.
+  const WORDS_PER_LEVEL = 5;
+function pickRandomWords(pool, n){
+  const a = pool.slice();
+  for(let i=a.length-1;i>0;i--){            // Fisher–Yates shuffle
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a.slice(0, n);
+}
+
+  state.words = pickRandomWords(lvl.words, WORDS_PER_LEVEL).map(w=>{
     const hidden = new Set();
     const hideCount = Math.min(state.levelIndex, w[0].length);
     const indices = Array.from({length: w[0].length}, (_,i)=>i);
