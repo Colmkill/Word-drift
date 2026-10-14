@@ -154,6 +154,8 @@
   .word-card{ border-radius:16px; padding:12px; background:rgba(67,56,202,.4); transition:outline-color .2s, background .2s; }
   .word-card.solved{ outline:2px solid var(--mint); background:rgba(52,211,153,0.12); }
   .word-card .w-lbl{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:rgba(253,244,227,.45); font-weight:700; margin:0 0 6px; }
+  .word-card .clue{ font-size:12px; color:rgba(253,230,138,.85); margin:0 0 6px; font-style:italic; }
+  .word-card.solved .clue{ display:none; }
   .slots{ display:flex; gap:6px; flex-wrap:wrap; }
   .word-slot{
     width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center;
@@ -306,12 +308,13 @@ const LETTER_POINTS = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:5,L:1,M:3,N:1,O
 const DISTRACTOR_SOURCE = "EARIOTNSLCUDPMHGBFYWKVXZJQ".split('');
 const START_SCORE = 150;
 
+/* Words are [WORD, CLUE] pairs; the clue shows as a subtitle on each word card. */
 const LEVEL_REGISTRY = Object.freeze([
-  {id:1, topic:"Backyard Basics",  words:["CAT","DOG","TREE","HOSE"],        driftSpeed:34, spawnMs:1550, maxOnScreen:6,  trayOversize:2, distractorRatio:0.04, premiumChance:0},
-  {id:2, topic:"Garden Friends",   words:["FROG","BEE","SNAIL"],              driftSpeed:44, spawnMs:1400, maxOnScreen:7,  trayOversize:2, distractorRatio:0.09, premiumChance:0},
-  {id:3, topic:"Ocean Creatures",  words:["CRAB","FISH","SHARK","OCTOPUS"],   driftSpeed:54, spawnMs:1250, maxOnScreen:8,  trayOversize:3, distractorRatio:0.13, premiumChance:0},
-  {id:4, topic:"Weather Words",    words:["CLOUD","STORM","BREEZE","RAINBOW"],driftSpeed:66, spawnMs:1100, maxOnScreen:9,  trayOversize:3, distractorRatio:0.18, premiumChance:0},
-  {id:5, topic:"Space Explorers",  words:["ROCKET","PLANET","GALAXY","COMET"],driftSpeed:80, spawnMs:950,  maxOnScreen:10, trayOversize:3, distractorRatio:0.22, premiumChance:0.07},
+  {id:1, topic:"Backyard Basics",  words:[["CAT","Chases mice and purrs"],["DOG","Loyal best friend"],["TREE","Grows bark and leaves"],["HOSE","Sprays the garden"]], driftSpeed:34, spawnMs:1550, maxOnScreen:6, trayOversize:2, distractorRatio:0.04, premiumChance:0},
+  {id:2, topic:"Garden Friends",   words:[["FROG","Hops and croaks by the pond"],["BEE","Makes honey, has a sting"],["SNAIL","Carries its shell slowly"]], driftSpeed:44, spawnMs:1400, maxOnScreen:7, trayOversize:2, distractorRatio:0.09, premiumChance:0},
+  {id:3, topic:"Ocean Creatures",  words:[["CRAB","Scuttles sideways on sand"],["FISH","Breathes through gills"],["SHARK","Fin you fear in the water"],["OCTOPUS","Eight arms, squirts ink"]], driftSpeed:54, spawnMs:1250, maxOnScreen:8, trayOversize:3, distractorRatio:0.13, premiumChance:0},
+  {id:4, topic:"Weather Words",    words:[["CLOUD","Fluffy float in the sky"],["STORM","Thunder, lightning, rain"],["BREEZE","A gentle wind"],["RAINBOW","Colours after the rain"]], driftSpeed:66, spawnMs:1100, maxOnScreen:9, trayOversize:3, distractorRatio:0.18, premiumChance:0},
+  {id:5, topic:"Space Explorers",  words:[["ROCKET","Blasts off to the stars"],["PLANET","Earth is one of these"],["GALAXY","A vast swirl of stars"],["COMET","Icy tail streaking past"]], driftSpeed:80, spawnMs:950, maxOnScreen:10, trayOversize:3, distractorRatio:0.22, premiumChance:0.07},
 ]);
 const TILE_COLORS = ["#FBBF24","#22D3EE","#F472B6","#34D399","#A78BFA","#FCA5A5"];
 const GRAB_SKINS = [
@@ -687,7 +690,7 @@ function freshState(){
 
 /* ================= HELPERS ================= */
 function currentLevel(){ return LEVEL_REGISTRY[state.levelIndex]; }
-function trayCapacity(lvl){ return Math.max(...lvl.words.map(w=>w.length)) + lvl.trayOversize; }
+function trayCapacity(lvl){ return Math.max(...lvl.words.map(([w])=>w.length)) + lvl.trayOversize; }
 function letterDemand(){
   const demand = {};
   state.words.forEach(w=>{
@@ -710,12 +713,12 @@ function setupWordsForLevel(lvl){
     // chosen randomly per word and stored in state so they stay stable across
     // the frequent re-renders of the workshop.
     const hidden = new Set();
-    const hideCount = Math.min(state.levelIndex, w.length);
-    const indices = Array.from({length: w.length}, (_,i)=>i);
+    const hideCount = Math.min(state.levelIndex, w[0].length);
+    const indices = Array.from({length: w[0].length}, (_,i)=>i);
     while(hidden.size < hideCount){
       hidden.add(indices.splice(Math.floor(Math.random()*indices.length), 1)[0]);
     }
-    return { word:w, slots:Array(w.length).fill(null), solved:false, hiddenSlots:hidden };
+    return { word:w[0], clue:w[1]||'', slots:Array(w[0].length).fill(null), solved:false, hiddenSlots:hidden };
   });
 }
 
@@ -769,6 +772,9 @@ function renderWorkshop(highlightWordIdx){
     const label = document.createElement('p');
     label.className = 'w-lbl';
     label.textContent = w.solved ? `✓ ${w.word}` : `${w.word.length}-letter word`;
+    const clue = document.createElement('p');
+    clue.className = 'clue';
+    clue.textContent = w.solved ? '' : `💡 ${w.clue}`;
     const slotsWrap = document.createElement('div');
     slotsWrap.className = 'slots';
     w.slots.forEach((letter, si)=>{
@@ -785,6 +791,7 @@ function renderWorkshop(highlightWordIdx){
       slotsWrap.appendChild(slot);
     });
     card.appendChild(label);
+    card.appendChild(clue);
     card.appendChild(slotsWrap);
     list.appendChild(card);
   });
@@ -804,7 +811,7 @@ function renderTray(justAddedIdx){
       slot.setAttribute('role','button');
       slot.setAttribute('tabindex','0');
       slot.setAttribute('aria-label', `tray letter ${tile.letter}, ${tile.points} points${tile.isPremium?', premium':''}`);
-      slot.textContent = tile.letter;
+      slot.innerHTML = `${tile.letter}<span class="pt">${tile.points}</span>`;
       slot.addEventListener('pointerdown', ()=>onTrayClick(i));
       slot.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onTrayClick(i); } });
     } else {
